@@ -1,0 +1,167 @@
+#用来注释代码
+int(xxx) 将xxx转为int
+float(xxx)将xxx转为float
+str(xxx) 将xxx转为string
+"xx{:.2}".format(yyy) 将yyy保留小数后2位【{:.2}】格式化到“”中
+"xx{:02d}".format(yyy) yyy不足2为的时候用0补齐
+"{},goodbye,{}",formate("111","2222")  相当于string.format
+"xxx".isalnum() 返回该字符串是否是字母或者数字
+"xxx".isalpha() 返回该字符串是否是字母
+"xxx".isdigit() 返回该字符串是否是数字
+len(可迭代对象) 返回可迭代对象的元素个数
+
+
+if xxx1:
+  yyy1
+elif xxx2:
+  yyy2
+else xxx3:
+  yyy3
+
+whliel xxx:
+  yyy
+
+try:
+  xxx
+except yyy1Error,yyy2Error:   捕获yyy1Error,不写Error的话，全部Error都会捕获
+  raise zzzError  抛出zzzError
+else:
+  bbb   #没错的时候走这里
+finally:
+  ccc  #必定会执行的
+  
+
+
+and or  not(xxx)
+
+创建函数
+def xxxfunction(name="abc", *args):  #不定参数可以用*
+  sssss
+  for arg in args:
+   dddd
+  return 1,2   #可以返回多个值
+lambda
+lambda age: True if age>18 else False  #只能在同一行
+
+
+from xxxmodule improt yyy 导入
+
+list []  ["a","b","c"]
+xxxlist[1:10:3] 设置xxxlist的start为1，end为9（不包括10），步长为3
+rang(1:10:3) 同上，返回的可迭代对象是1到9（不包括10），步长为3
+xxxlist.extend(可迭代的对象) 在xxxlist后添加可迭代的对象
+xxxlist.append(yyy) 在xxxlist后添加yyy
+xxxlist.reverse() 翻转
+xxxlist.copy() 浅复制
+xxlist.pop(yyyIndex) 默认(不填yyyIndex)删除最后一个或者删除yyyIndex位置的元素，并返回
+xxxlist.remove(xxxvalue) 删除值为xxxvalue的元素
+",".join(xxxlist)  将xxxlist的元素用,连成字符串
+xxxlist + yyylist 将yyylist加到xxxlist的末尾
+tuple ()  不可变的list  (1,2,3)
+
+set 不重复的list
+s = set(xxxlist)
+frozenset 不能被修改的set
+xxxset | yyyset 并集
+xxxset.intersection(yyyset) 交集
+xxxset.add(yyy)  对xxxset添加yyy元素
+xxxset.discard(yyy) 删除xxxset中的yyy元素
+xxxset.clear()  清空xxxset里面的元素
+
+dict {} 字典  ｛"a":1,"b":2｝
+xxxdict.get(yyykey) 当yyykey不存在的时候，返回None
+xxxdict[yyykey] 当yyykey不存在的时候，会报错
+yyykey is in xxxdict  返回xxxdict是否存在yyykey
+del dict[xxxkey] 删除key
+dict.pop(xxxkey) 删除key，返回dict[xxxkey]
+list(xxxdict.items())  包含key和value的元组的list
+list(xxxdict.keys()) 包含key的list
+list(xxxdict.values()) 包含value的list
+for key in dict:  #默认循环的dict的key
+for value in dict.values(): #循环的dict的value
+
+class xxxclass(yyyclass): #继承yyyclass
+  def __init__(self,name,*args): #初始化方法， *arg 多个参数的时候可以用*表示
+    xxx
+	super().xxxfunction()   调用父类的方法
+	yyyclass.xxxfunction(self) 调用父类的方法
+  @property   #get方法
+  def xxx属性:
+	return xxx
+  @xxx属性.setter  #set方法
+  def xxx属性(self,value)
+    xxx=value
+  @staticmethod  #静态方法
+  def xxx方法()
+type(obj) 获取obj的一个class的对象，里面的__name就是obj的classType的string名称
+
+
+读写文件
+file = open("xxxfilePath","r",encoding="utf-8")  打开xxxfilePath文件，读取的模式(w:写的模式【替换】，a：写模式【加到文件的末尾】，r+：对鞋的模式)，用utf-8来读取
+file.close()  关闭file文件，open与close要成对出现
+with open....  as file:  #这样的话可以不用写close
+  file.xxxxx
+file.readable() 文件是否可读
+file.read() 读取文件的全部内容
+file.readline()  返回读取的一行的内容  判断是否到尾部可以用 not file.readline() 为true的时候表示到达末尾
+file.readlines() 返回读取全部行，每一行的内容就是list的元素
+file.write("xxxx") 将xxxx写入文件
+os.rename(xxx,yyy) 将xxx文件改名为yyy
+os.remove(xxx) 删除xxx文件
+os.mkdir(xxx) 创建xxx目录
+os.chdir(xxx) 将当前路径转到xxx下
+os.rmdir(xxx) 删除xxx目录
+
+list(map(xxxfun,xxxlist)) 将xxxlist中的元素应用xxxfunc后返回新的list(xxxlist中的元素不变)
+list(map(lambda x,y:x+y, xxxlist1,xxxlist2))  参数可以多个，后面也要对应多个list
+list(filter(xxxfunc,xxxlist))  只剩下xxxfunc返回true的元素的list
+reduce(lambda x,y:x+y, xxxlist)) 相当于对xxxlist中的元素进行聚合求和，返回一个数值，此处相等于sum(xxxlist)
+any(x.isdigit for x in xxxlist)
+
+
+iter
+a = iter(xxxlist)  #返回一个iter对象
+next(a)  一下个元素 自定义的话，可以在__next__()函数中用 raise StopIteration中断iter
+def xxxfunc()
+ yield yyy1
+ yield yyy2
+p = xxxfunc()
+next(p) 返回yyy1
+next(p) 返回yyy2
+
+[i * x for x in range(1,3)] 返回[2,4] 相当于map
+[i * x for x in range(1,3) if x%2 == 0] 返回[2] 相当于filter
+[x*y for x in range[1,3] for y in range(4,6)] 相当于两个for嵌套循环
+
+线程
+t = threading.Thread(target=xxx方法,args=(调用xxx方法的参数列表))
+t.start() 开始线程
+class xxxThread(Thread)  #自定义线程
+  def run(self): #thread.start中运行的方法
+    xxxx
+thread = xxxThread()
+thread.start()
+thread.join() 等待线程结束
+lock = threading.lock()
+lock.acquire() 上锁
+lock.release() 解锁
+
+time
+time.gmtime() 获取当前时间
+time.sleep(5) 休眠5秒
+
+random
+random.randint(1,5)
+random.choose(xxxlist) 随机返回xxxlist的一个元素
+
+正则表达式
+for i in re.finditer("abc","abc,dfeabc,2343abcdsd")  #递归寻找
+  t = i.span() 返回一个(start_index,end+1_index)的元组  end+1_index指end_index+1
+regex_parten = re.compile(xxxparten) #替换
+regex_parten .sub("替换成的内容"，被匹配的字符串)
+
+
+
+安装  在cmd中
+pip install xxx  安装xxx
+pip uninstall xxx 卸载xxx
