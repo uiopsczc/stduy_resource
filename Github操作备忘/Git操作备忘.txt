@@ -1,0 +1,41 @@
+ssh-keygen -t rsa  -C  "your email@.com" 创建密钥
+打开id_rsa.pub文件，将里面的内容添加到git网页上的个人的setting的add ssh密钥中
+
+将一个远程仓库克隆到本地
+git clone https://github.com/xxxx/yyy.git
+
+git add "file_name" 确定要提交的文件
+
+git commit -m "第一次提交 xxx文件"
+
+将本地(origin)的commit的修改提交到远程的master上
+git push origin master
+
+将本地和远程仓库建立联系
+git remote add origin remote_url
+
+/////////////////////////分支相关/////////////////////////
+查看所有分支
+git branch -a 
+
+查看远程分支
+git branch -r 
+
+本地创建新的分支,并切换到新的分支上
+git checkout -b branch_name      相当于 git branch branch_name 和 git checkout branch_name
+
+切换到新的分支上
+git checkout branch_name
+
+将新的分支推送到github上
+git push origin branch_name
+
+删除本地分支
+git branch -d branch_name
+
+删除github上面的远程分支
+git push origin:branch_name
+
+
+
+
