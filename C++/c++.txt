@@ -32,8 +32,7 @@ xxxClass* yyy = new xxxClass;效果跟上面的一样，不过yyy是指针,但�
 简单来说就是有new的地方，就一定要有delete
 
 
-delete xxxPointer;
-delete [] xxxPointer;//如果xxxPonter指向都是个数组，则需要在delete后加上 []
+
 
 int a[5];//数组在stack上，会自动delete
 int* a = new int[5];//数组在heap上，需要delete
@@ -44,6 +43,73 @@ xxxClass* xx = (xxxClass*)malloc(sizeof(xxxClass));//只会分配内存，不会
 xxxClass* xx = new xxxClass[10];//分配内存10个xxxClass，但不会调用里面的构造函数
 
 
+extern xxClass xx;//在其他文件中有xxClass xx的声明，这里的xx会使用其他文件中的xx的值
+
+如果一个类（或者其继承的类）中有virtual(一个和多个virtual是一样的)，则会在头部加多4byte(一个int的指针，指向virtual table), 同一个类的不同实例的virtual table只有一个，即同一个类的不同实例的virtual table的指针是相同的
+用
+int* ponter = reinterpret_cast<int*>(&xxxInstance);
+cout<<*ponter<<endl;
+ponter++;
+cout<<*ponter<<endl;
+可以看到结果
+
+
+class A1:public A{//注意继承的类前有public
+}
+
+
+int m;
+int* i;//指针
+int& j = m;//引用,m,j指向同一块ram，所以j改变值，m也会改变值，相等于j是m的别名
+
+A a;
+A a1 = a;//这是创建一个A的a1，然后将a的内容复制到a1中，所以a1和a相对的不受影响（除了那些引用的成员变量）
+A& a1 = a;//这样修改a1，也会修改a
+函数中的类参数一般用如下的方式
+void XXFunc(A& a)//来进行对a的读写操作
+
+---------------------virtual--------------------
+抽象方法的写法: virtual xxx() = 0; //  =0就是抽象方法，不需要在该类中实现
+c++中的interface接口实现方法就是上面的virtual xxx() = 0;
+
+virtual 没有加virtual的时候，如果是这种A* a = new A1;则调用a的方法时，只会调用A的方法，不会去调用运行的类A1的方法；但如果加了virtual，则先调用A的构造函数，再调用A的构造函数
+virtual 没有加virtual的时候，在析构a的时候，只会调用A的析构，不会调用A1的析构；但如果加了virtual，则先调用A1的析构，再调用A的析构
+要调用父类的方法的时候，用 父类::xxx方法()显示调用，如: A1::foo()
+
+
+---------------------const--------------------
+const在*左边，data是const，否则，指针pointer是const
+const A* a;// (*a)是const，即object是const，和下面例子的区分点在*之前还是之后
+A* const a; // a是const，即指针pointer是const
+const A* a;
+A* a1 = const_cast<A*>(a);//用来使a1能够成功赋值，不然会出错
+
+const int i =9;
+const_cast<int&>(i)=6;//使const变成非const
+int j;
+static_cast<const int&>(j)=7;//使非const变成const
+
+void XXfunc(const A& a)//进行对a的只读操作;用void XXfunc(A a)也行，但这样的话，是一个创建操作，浪费内存,参数中A a相当于 A a = b;
+const string& XXfunc()//不能对返回的值进行修改，因为是const string&
+void XXfunc() const {.....}//(*this)为const，指该方法不会修改该方法所在类的成员变量，并且在方法里面不能调用非 const在方面后面的 方法
+mutable xxClass xx;/mutable可以使xxxfunction(...) const函数中的变量修改，不使用mutable的变量在xxxfunction(...) const中是不能被修改的;或者在函数中用const_cast<xxClass*>(this)->xxfiled进行赋值
+
+---------------------typeid--------------------
+typeid(xxxClass)返回一个typeInfo 里面包含.name()，用于显示类名
+如: 
+#include <typeinfo>
+A* a = new A1();
+const type_info& t = typeid(*a);
+t.name() 返回的是A1
+if(typeid(*a) == typeid(A1)) ..... //判断是不是特定类型
+
+---------------------NameSpace--------------------
+namespace xxxNameSpace{}//同csharp一样
+using xxxNameSpace::yyyClass
+using namespace xxxNameSpace;//会将xxxNameSpace全部的类加入来，相当于impaort xxx.*;
+
+
+---------------------复制copy---------------------
 struct A
 {
 	int name;
@@ -73,72 +139,12 @@ struct B
 B b1;
 b1.street= 4
 B b2(b1);//这样可以对b1进行深复制clone
-----------------------------------------------------
+
 一般深度复制的做法
 xxClass(const xxClass& clone){....}//建立一个相同类型的构造函数，里面对pointer的成员变量进行处理
 
 
-如果一个类（或者其继承的类）中有virtual(一个和多个virtual是一样的)，则会在头部加多4byte(一个int的指针，指向virtual table), 同一个类的不同实例的virtual table只有一个，即同一个类的不同实例的virtual table的指针是相同的
-用
-int* ponter = reinterpret_cast<int*>(&xxxInstance);
-cout<<*ponter<<endl;
-ponter++;
-cout<<*ponter<<endl;
-可以看到结果
-
-A* a = new A1();
-A1* a1 = static_cast<A1*>(a);//用static_cast进行类型编译时转换cast
-A1* a1 = dynamic_cast<A1*>(a);//用dynamic_cast进行运行时编译转换cast  相当于csharp中的as,用if(a1)来判断是否成功转换
-if(dynamic_cast<A1*>(a))  相当于csharp中的if(a is A1)
-
-抽象方法的写法: virtual xxx() = 0; //  =0就是抽象方法，不需要在该类中实现
-c++中的interface接口实现方法就是上面的virtual xxx() = 0;
-
-virtual 没有加virtual的时候，如果是这种A* a = new A1;则调用a的方法时，只会调用A的方法，不会去调用运行的类A1的方法
-要调用父类的方法的时候，用 父类::xxx方法()显示调用，如: A1::foo()
-
-
-class A1:public A{//注意继承的类前有public
-}
-
-typedef AClass aClass;//定义AClass类的别名aClass，则在程序中用到aClass相当于AClass
-
-typeid(xxxClass)返回一个typeInfo 里面包含.name()，用于显示类名
-如: 
-#include <typeinfo>
-A* a = new A1();
-const type_info& t = typeid(*a);
-t.name() 返回的是A1
-if(typeid(*a) == typeid(A1)) ..... //判断是不是特定类型
-
-
-int m;
-int* i;//指针
-int& j = m;//引用,m,j指向同一块ram，所以j改变值，m也会改变值，相等于j是m的别名
-
-A a;
-A a1 = a;//这是创建一个A的a1，然后将a的内容复制到a1中，所以a1和a相对的不受影响（除了那些引用的成员变量）
-A& a1 = a;//这样修改a1，也会修改a
-函数中的类参数一般用如下的方式
-void XXFunc(A& a)//来进行对a的读写操作
-void XXfunc(const A& a)//进行对a的只读操作;用void XXfunc(A a)也行，但这样的话，是一个创建操作，浪费内存,参数中A a相当于 A a = b;
-mutable xxClass xx;/mutable可以使xxxfunction(...) const函数中的变量修改，不使用mutable的变量在xxxfunction(...) const中是不能被修改的
-
-namespace xxxNameSpace{}//同csharp一样
-using xxxNameSpace::yyyClass
-using namespace xxxNameSpace;//会将xxxNameSpace全部的类加入来，相当于impaort xxx.*;
-
-include <string>
-char* a1= "abc";
-char* a2 = a1;
-a2[0] = "d";//此处会出错，应为string不能被修改，所以应该要用cstring来修改,如下
-include <cstring>
-include <string>
-char* a1= new char[3];
-strcpy(a1,"abc");
-char* a2 = a1;
-a2[0] = "d"
-
+---------------------enum枚举---------------------
 enum xxxEnum//枚举
 {
 	A,
@@ -149,88 +155,16 @@ xxxEnum bb = xxxEnum::A;
 bb = static_cast<xxxEnum>(0);
 int i = xxxEnum::A;
 
+---------------------union共用空间---------------------
 union xxxUnion//内存空间是成员变量中sizeof最长的那个，所有成员变量共用这块最长的内存，只会把xxxUnion看成是其中一个成员变量来处理
 {
 	short a;
 	char b;
 }
 
-const A* a;// (*a)是const，即object是const，和下面例子的区分点在*之前还是之后
-A* const a; // a是const，即指针pointer是const
-const A* a;
-A* a1 = const_cast<A*>(a);//用来使a1能够成功赋值，不然会出错
-
-char* buff = new char[8];
-char* a="bcsdsf";
-strlen(a);//用于获取字符串的长度
-memset(buff,0,8);//设置buff的8个元素都为0
-memcpy(buff,a,strlen(a)+1);//复制a中的字符串到buff中，为什么要strlen(a)+1，因为要最后一位0来判断数组是否结束
 
 
-头文件中:
-#pragma once //表示该头文件只会被包含一次
-#define xxx //定义xxx
-#ifndef xxx  //如果没有定义xxx，则做里面的事情
-#endif  
-#define Main int main()\    斜杠是指忽略换行,则下面一行都是归这个define管
-{\
-}
-
-
-extern xxClass xx;//在其他文件中有xxClass xx的声明，这里的xx会使用其他文件中的xx的值
-
-#include <string>
-using namespace std;
-string name = "aa";
-string xx = string("aa")+bb;//字符串拼接
-string xx = "aa"s+bb;//效果同上，加个s在末尾相当于string(xxx)
-xx += "cc";//字符串拼接
-bool is_contain = name.find("ab")!= string:npos;//字符串中是否包含
-char* a = R"sdsd
-dsf
-sdf";//多行
-
-cout<<重写
-std::ostream& operator<<(std::ostream& stream, const xxClass& xx)
-{
-	stream<<xx.kdkdkdk<<other.y;
-	return stream;
-}
-
-#include <memory>
-{
-	std:unique_ptr<xxxClass> xxPointer= std:make_unique<xxxClass>();//在{}这个scope外的时候会自动调用delete析构函数，且xxPointer不能被copy，故：std:unique_ptr<xxxClass> xxPointer2 = xxPointer;是禁止的
-
-}
-
-std:shared_ptr<xxxClass> xxPointer= std:make_shader<xxxClass>();//会增加refCount,当all reference都退出scope时候才会调用delete析构函数，故std:shared_ptr<xxxClass> xxPointer2= xxPointer;当xxPointer2和xxPointer都退出scope的时候才会销毁
-std:weak_ptr<xxxClass> xxPointer2= xxPointer;//不会增加refCount，只要有一个退出scope，则它就会调用delete析构函数
-
-
-#include <vector>
-std:vector<xxClass*> list;//相当于csharp的List<xxClass*>,保存pointer比保存object更好，因为在插入删除的时候，移动的东西比较少，所以性能会更好
-list.push_back(xxxx);//相当于csharp的list.add()
-list.emplace_back(构造函数的参数);//在list中去构造元素，这样避免了copy的过程
-for(int i=0;i<list.size();i++)相当于 for(xxClass& v:list)
-list.clear();
-list.erase(list.begin()+2);//相当于csharp中的list.RemvoeAt(2);
-list.reserve(3);//设置最大容量为3
-
-auto xxx1 =....;//auto 相当于csharp的var
-auto xxx1 = xxxfunction;//auto的指针形式是 void(*xxx1)(int)= xxxfunction 其中void是返回值，xxx1是自定义的名称,int是里面的参数；xxx1(1000)调用xxxfunction函数
-或者lambda是这样的  auto k = [](int value){count<<value<<endl;}    //int value 是参数
-//,[]是外部的变量，通过什么方式进来
-如:
-int a;
-auto k = [&a](int value){count<<a<<endl;} //这样外部的a就可以进来lambda中使用了（[&]则是全部外部变量都通过引用进来）,也可以通过[a]或者[=]都是copy的形式给lambda
-如果是上述这种形式，则它的auto是 const std:function<void(int)>&      当然要include <functional>
-std:vector<int> values = {1,2,3};
-auto it = std::find_if(values.begin(),values.end(), [](int value){return value>3;}   //要include <algorithm>
-cout<<*it<<endl;
-返回多个值
-std:pair<xxClass1,xxClass2> yyFunction(){...., std:pair<xxClass1,xxClass2> xxPair = make_pair<xxClass1,xxClass2>(xx1,xx2);return xxPair;}//用pair，make_pair创建，用xxPair.first获取第一个（或者std:get<0>(xxPair)）
-或者自定定义struct，然后用{xx1,xx2}创建这个struct
-
+---------------------template模板---------------------
 template<typename T>  //模板
 void xxx(T value){......}
 template<int T>//这样也行，到时候用到T的时候，都是外部调用的值，如 xxClass<5> d; 5就是T的值
@@ -238,11 +172,41 @@ template<typename T,int N>
 template<typename... args>多个参数
 xxClass(std::forward<Args>(args)...);这样可以创建xxClass的实例，不是指针，如果想用指针，在前面加new空格
 
+
+
+
+
+
+--------------------------创建删除new的内存--------------------------
+xxxClass* yyy = new xxxClass();简单来说就是有new的地方，就一定要有delete
+
+delete xxxPointer;
+delete [] xxxPointer;//如果xxxPonter指向都是个数组，则需要在delete后加上 []
+
 new(&xxClassArray[i]) xxClass();这样可以在指定内存中创建xxClass实例  new(内存pointer) 类型()
 xxClass* xxClassArray = (xxClass*)::operator new(yyCapacity*sizeof(xxClass)); 
 ::operator delete(xxClassArray, yyCapacity*sizeof(xxClass));//删除内存，这里不会调用析构函数，如果是delete[] xxClassArray;则会递归调用析构函数
 
 
+int** a = new int*[50];二维数组
+for(int i=0;i<50;i++)
+   delete[] a[i];
+delete a[]
+变成一维数组如[5*6]这样是最好的，因为不用到处找，在内存中ram相近
+
+----------------------------------------------------
+vector4
+{
+	union{
+		struct{float x,y,z,w};
+		struct{float x,y};//技巧之处在于union共用这个union,所以去vector2的时候就很方便了
+	};
+}
+
+
+
+
+--------------------------多线程--------------------------
 #include<thread>
 void DoWork()
 {
@@ -253,67 +217,7 @@ t.join();//当t执行完再往下执行
 std::this_thread::sleep_for(1s);休息1秒
 std::this_thread::get_id();//获取thread的id
 
-
-#include <chrono>
-std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::high_resolution_clock::now();//获取当前时间
-std::chrono::time_point<std::chrono::steady_clock>  end = std::chrono::high_resolution_clock::now();
-std::chrono::duration<float> duration = end - start;
-duration.count();//以秒为单位的时长
-
-int** a = new int*[50];二维数组
-for(int i=0;i<50;i++)
-   delete[] a[i];
-delete a[]
-变成一维数组如[5*6]这样是最好的，因为不用到处找，在内存中ram相近
-
-#include <vector>
-#include <algorithm>
-std::vector<int> values = {3,5,1,4,2};
-std::sort(values.begin(),values.end(),[](int a, int b) {return a<b;});//从小到大
-
-
-vector4
-{
-	union{
-		struct{float x,y,z,w};
-		struct{float x,y};//技巧之处在于union共用这个union,所以去vector2的时候就很方便了
-	};
-}
-
-#include <tuple>
-std::tuple<std::string,int> hello(){reutrn {"ssss",4};}
-std::tuple<std::string,int> a = hello();
-std::string& name = std::get<0>(a);
-////////////////////////////////////////
-std::string name;
-int age;
-std::tie(name,age) = hello();
-////////////////////////////////////////
-auto[name, age] = hello(); //或者这种方式更好
-
-#include <optional>
-std::optional<string> hello(int i){ if(i==1)return "kkkk";else return {};}
-auto data = hello(4);
-if(data.has_value()) //data有值,就是csharp中的？,nullable
-{
-	std::string& value = data.value();
-	std::string value2 = data.value_or("dkkdkd");
-}
-
-#include <variant>
-std::variant<std::string,int> data;
-data = "xxxx";
-cout<<std::get<std::string>(data)<<endl;
-data = 2;
-cout<<std::get<int>(data)<<endl;
-
-#include<any>
-std::any data;
-data = 2;
-data = "xxxx";
-std::string& s  = std::any_cast<std::string&>(data);
-
-//多线程 锁
+===============锁===============
 #include <future>
 std::mutex mesh_mutex;//对写操作上锁
 std:vector<std:future<void LoadMesh函数的返回类型> wait_all_finish_list;//要加入其中，才会等待其中的async全部完成才会继续
@@ -328,60 +232,131 @@ void LoadMesh(std:vector<Mesh>* meshes,std::string* file_path)
 foreach file_path in file_path_list  //简写
 wait_all_finish_list.push_back(std::async(std::launch::async, LoadMesh,&meshes,&file_path))
 
-//string 优化 用string_view可以避免创建内存
-void PrintName(std::string_view name)
-{
-	cout<<name<<endl;
-}
-std::string name="chen xxyy"//这里会产生一个分配内存
-std::string_view firstName(name.c_string(),4);//string_view这个不会产生clone，从而不会分配内存，4是长度,
-std::string_view lastName(name.c_string()+5,4);//string_view这个不会产生clone，从而不会分配内存,5是长度，4是开始的index,
-PrintName(firstName);
-PrintName(lastName);
-////////////////////////////////////////////////////////////////////////////
-char* name="chen xxyy"//这里不会产生一个分配内存
-std::string_view firstName(name,4);//string_view这个不会产生clone，从而不会分配内存，4是长度,
-std::string_view lastName(name+5,4);//string_view这个不会产生clone，从而不会分配内存,5是长度，4是开始的index,
-PrintName(firstName);
-PrintName(lastName);
 
-LValue 是指变量（如 i,j,k） 在函数的参数中用xxxClass&表示
-RValue 是指赋予的值(如 1，2，3) 在函数的参数中用xxxClass&&表示两个&
-如果想函数中的参数既能用LValue又能RValue，则用const xxClass&表示，其实际上是 xxClass temp = ??; const xxClass& u = temp;
 
-for(int i=0; i<xxClassVector.size(); i++)
-另一种形式是
-for(std::vector<int>::iterator it =xxClassVector.begin(); it!=xxClassVector.end(); it++)//这种形式通常是要中间删掉某个元素或者加入元素的时候用到   [begin,end)
-	*itr是获取值(itr是指针)
-for(auto kv: xxmap)
-for(auto [key,value] : xxmap)_
 
-宏mirco
+
+
+
+--------------------------宏mirco--------------------------
 __LINE__表示在文件中的第几行
 __FUNCTION__表示当前所在函数的名称
 __FUNCSIG__表示当前所在函数签名
 
-==========================================STL====================================================
+#define xxx //定义xxx
+#ifndef xxx  //如果没有定义xxx，则做里面的事情
+#endif  
+#define Main int main()\    斜杠是指忽略换行,则下面一行都是归这个define管
+{\
+}
+
+typedef AClass aClass;//定义AClass类的别名aClass，则在程序中用到aClass相当于AClass
+
+--------------------------头文件--------------------------
+头文件中:
+#pragma once //表示该头文件只会被包含一次
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//cast
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-------------------------- static_cast----------------------------------------
+int i= 9;
+flaot f = static_cast<float>(i);
+dog d1= static_cast<dog>(string("Bob"));//string to dog的转换需要在 dog中实现
+dog* pd = static_cast<dog*>(new yellowdog());//将指针或者reference从一个type转为其相关的type（可以向上或者向下转型），不会进行检测是否成功
+
+A* a = new A1();
+A1* a1 = static_cast<A1*>(a);//用static_cast进行类型编译时转换cast
+
+只有static_cast可以转换object类型，当为转换为object的时候，可以是任意类型，需要实现转换的函数，如string to dog的转换需要在 dog中实现；其他的cast都是只能转换指针或者reference，转换类型必须是相关的type（可以向上或者向下转型）
+-------------------------- dynamic_cast----------------------------------------
+dog* pd = new yellowdog();
+yellowdog py= dynamic_cast<yellowdog*>(pd);
+//将指针或者reference从一个type转为其相关的type（向下转型）
+//会进行检测是否成功,如果不成功py=0;
+//转换的两个类型需要有virtual方法
+
+A* a = new A1();
+A1* a1 = dynamic_cast<A1*>(a);//用dynamic_cast进行运行时编译转换cast  相当于csharp中的as,用if(a1)来判断是否成功转换
+if(dynamic_cast<A1*>(a))  相当于csharp中的if(a is A1)
+
+-------------------------- const_cast----------------------------------------
+cosnt char* str ="hello,world";
+char* can_change_str = const_cast<char*>(str);//使str中的const去掉，可以被修改,
+//必须两个转换的类型是一样的
+
+-------------------------- reinterpret_cast----------------------------------------
+long p = 511109878;
+dog* dd = reinterpret_cast<dog*>(p);//两个转换类可以是任意类型
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//STL
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::array
 front() 第一个元素  back()最后一个元素
 
 std::vector
 insert()  emplace() push_back() emplace_back() pop_back() resize() swap() erase() clear() find()
 
--------------------------- 线性结构---------------------------------------- 
+-------------------------- 线性结构----------------------------------------
+for(int i=0; i<xxClassVector.size(); i++)
+或者
+for(std::vector<int>::iterator it =xxClassVector.begin(); it!=xxClassVector.end(); it++)//这种形式通常是要中间删掉某个元素或者加入元素的时候用到   [begin,end)
+	*itr是获取值(itr是指针)
+===============vector==============
 #inculde <vector> 线性结构 size只能向后增长，注意insert的时候需要resize array，会出现copy的过程
 vector<int> myvector;
 myvector.push_back(4);//在最后插入
 myvector.push_frontk(4); //在最前面插入
 myvector.size();
+myvec.resize(6);//size和capacity都会改变为6，即可能会生成新的元素填入序列中
+myvec.reserve(6);//只有capacity都会改变为6
 可以使用[]来index某个元素
 if(myvector.empty())//返回bool,是否为null或者size为0
   ....
 myvector.clear();
 myvector.swap(myvector2);
 
-#inculde <deque>  线性结构 size可以向前,向后增长，注意insert的时候需要resize array，会出现copy的过程
+emplace_back和push_back类似，但emplace_back中的参数是用来作为vector的构造类型参数，如1
+vector<Dog> v;
+v.emplace_back("cccc");//"cccc"作为Dog的构造函数的参数操作Dog，然后push进去vector中
 
+vector<Dog> v1;
+YellowDog yelloDog;//YellowDog是继承自Dog
+v1.push_back(yelloDog);
+v1[0].bark();//调用的是Dog的bark，而不会是YellowDog的bark，因为vector<Dog>；v1.push_back(yelloDog);是将yelloDog作为参数来构建一个新的Dog
+那么如果想最终结果是YellowDog的bark，则需要这样写(用指针,且Dog中的bark需要加上virtual)
+vector<Dog*> v1;
+YellowDog yelloDog;//YellowDog是继承自Dog
+v1.push_back(&yelloDog);
+v1[0]->bark();
+
+vector和deque的remove采用
+auto itr = remove(vec.begin(),vec.end(),36);//将要保留的元素提前到序列的前面
+vec.erase(itr,vec.end());
+vec.shrink_to_fit();//c++11之前是用vector<int>(myvec).swap(myvec);
+手动遍历remove的话，采用itr = xxx.erase(itr);//返回的是一个新的有效的itr,旧的itr会变成无效，所以在旧的itr上+1是无意义的
+
+如果是元素类型是基础类型，用vector比deque好
+如果需要频繁和C交互的话，用vector比deque好
+
+===============deque==============
+#inculde <deque>  线性结构 size可以向前,向后增长，注意insert的时候需要resize array，会出现copy的过程
+如果有很多的push_front操作，使用deque比使用vector好
+如果需要的连续内存比较大的话，用deque比vector好
+如果增长是不确定的话，用deque比vector好
+如果需要保存指针pointer的正确性，用deque比vector好，（因为dque是增加数组，不会改变指针；而vector在不够capacity的时候，是新开辟一段内存，然后copy过去，所以旧的指针pointer就没意义了）
+
+===============list==============
 #inculde <list> 线性结构 是一个双向（每个node有一个向前指针和一个向后指针）list
 list<int> mylist = {5,2,9}
 list<int>::iterator itr = find(mylist.begin(),mylist.end(),2);
@@ -390,8 +365,14 @@ itr++ 下一个
 mylist.erase(itr);
 不能使用[]来index某个元素
 
+list的remove采用
+xxlist.remove(3);
+手动遍历remove的话，采用itr = xxx.erase(itr);//返回的是一个新的有效的itr,旧的itr会变成无效，所以在旧的itr上+1是无意义的
+
+===============forward list==============
 #include <forward list> 线性结构 是一个单向（每个node有一个向前指针）list
 
+===============array==============
 #include <array> 线性结构
 array<int,3> a = {3,4,5};//如果是int a[3]={3,4,5}是不能使用下面的函数的
 a.begin();
@@ -400,6 +381,12 @@ a.size();
 a.swap();
 
 -------------------------- 二叉树结构---------------------------------------- 
+二叉树结构的remove采用 xxx.erase(35);
+手动遍历remove的话，采用xxx.erase(itr++);//没有返回，erase操作完后新的itr（即当前的itr）是无效的，所以如果之前不进行保存，之后新的itr（即当前的itr）再+1的话，是无意义的；解决方法是xxx.erase(itr++)；是在erase前保存了itr，调用后再进行旧的itr+1，再赋值为新的itr（即当前的itr）
+
+for(auto kv: xxmap)
+for(auto [key,value] : xxmap)_
+===============set==============
 #inculde <set>//set,multiset 不重复的list,二叉树结构  插入消耗时间O(log(n)) 通常按值从小往打排序  查找消耗时间O(log(n))   
 set<int> myset;
 myset.insert(3);myset.insert(4);
@@ -414,6 +401,7 @@ myset.erase(it);
 myset.erase(4);
 *it = 6;//这样会出错，应为会将二叉树按值从小到大的结构排列弄乱
 
+===============map==============
 #inculde <map>//map,multimap 二叉树结构  插入消耗时间O(log(n))  查找消耗时间O(log(n))
 map<char,int> mymap;
 mymap.insert(pair<char,int>('a',1);
@@ -428,6 +416,12 @@ mymap.insert(make_pair('z',300));//出错，因为z已经存在
 不能用mymap[]来index某个元素，但可以用mymap.find("xxx")来index某个元素
 
 -------------------------- hashtable结构---------------------------------------- 
+hashtable结构的remove采用 xxx.erase(35);
+手动遍历remove的话，采用itr = xxx.erase(itr);//返回的是一个新的有效的itr,旧的itr会变成无效，所以在旧的itr上+1是无意义的
+
+for(auto kv: xxmap)
+for(auto [key,value] : xxmap)
+==================================
 #inculde <unordered_set>//unordered_set,unoreder_multiset hashtable结构(桶【从hash函数中产生】+linkedlist结构)，插入消耗O(1),查找消耗O(1)，没有hash collision的情况下
  同样value不能修改，会弄乱结构
 #inculde <unordered_map>//unordered_map,unoreder_multimap hashtable结构(桶【从hash函数中产生】+linkedlist结构)，插入消耗O(1),查找消耗O(1)，没有hash collision 的情况下
@@ -436,6 +430,7 @@ map<char,int> mymap;
 mymap.insert(pair<char,int>('z',1);
 mymap['z'] =300;//可以用来修改已经存在的key的值
 
+===============stack==============
 #inculde <stack>
 push(),pop(),top()
 #inculde <queue>
@@ -444,24 +439,26 @@ push(),pop(),front(),back()
 push(),pop(),top()
 
 
+===============iterator==============
 #inculde <iterator>
 distacnce(iter1,iter2);相差多少
 advance(iter,5);// 等于iter+=5
-、、、、、、、、、、、、
+
 insert_iterator,back_insert_iterator,front_insert_iterator
 vector<int> vec1={4,5}
 vector<int> vec2={1,2,3,6}
 vector<int>::iterator it = find(vec2.begin(),vec2.end(),3)
 insert_iterator<vector<int>> i_iter(vec2,it);
 copy(vec1.begin(),vec1.end(),i_itr);//将vec1从begin到end的元素copy到i_itr的位置
-、、、、、、、
+
+
 reverse iterator
 vector<int> vec ={4,5,6,7}
 reverse_iterator<vector<int>::iterator> ritr;
 for(ritr= vec.rbegin();ritr!=vec.rend();ritr++)
 ....
 
-
+===============algorithm==============
 #inculde <algorithm>
 vector<int> vec={4,2,5,1,3}
 vector<int>::iterator itr= min_element(vec.begin(),vec.end);//查找最小的元素
@@ -482,16 +479,16 @@ int arr[3]={6,3,7};//在Native的array中也可以用
 sort(arr,arr+3);
 
 --------------------------------WalkThrough------------------------------------------
-//统计有多少个符合条件的元素
+===============统计有多少个符合条件的元素===============
 num = count_if(vec.begin(),vec.end(),[](int x){return x<10;};//统计少于10的有多少个元素
 num = count(vec.begin(),vec.end(),10);//统计等于10的有多少个元素
 
-//找出最大或者最小的元素
+===============找出最大或者最小的元素===============
 itr = max_element(vec.begin(),vec.end());//找出最大的元素的指针,有多个符合的情况下，返回的是最先找到的那个
 itr = max_element(vec.begin(),vec.end(),[](int x,int y){return x<y;});//找出最大的元素的指针，有多个符合的情况下，返回的是最先找到的那个
 pari_of_itr = minmax_element(vec.begin(),vec.end(),[](int x,int y){return x<y;});//找出第一个最小的元素和最后一个最大的元素
 
-//找出指定条件的元素
+===============找出指定条件的元素===============
 itr=find(vec.begin(),vec.end(),55);//有多个符合的情况下，返回的是最先找到的那个
 itr= find_if(vec.begin(),vec.end(),[](int x){return x>80;});//有多个符合的情况下，返回的是最先找到的那个
 itr= find_if_not(....)
@@ -501,17 +498,17 @@ itr =  find_end(vec.begin(),vec.end(), sub_vec.begin(),sub_vec.end());//在vec�
 itr = find_first_of(vec.begin(),vec.end(),items.begin(),items.end());//在vec中找出第一个元素被包含在items中的
 itr = find_first_of(vec.begin(),vec.end(),items.begin(),items.end()，[](int x,int y){return x==y*4;};//在vec中找出第一个元素被包含在items中的
 
-//是否相等
+===============是否相等===============
 equal(vec.begin(),vec.end(),vec2.begin())//判断两个序列是否相等
 is_permutation(vec.begin(),vec.end(),vec2.begin())//判断两个序列都有相同的元素，但排列不一样
 pair_of_itr=mismatch(vec.begin(),vec.end(),vec2.begin());//返回不相同的元素，pair_of_itr.first是vec的元素，pair_of_itr.second是vec2的元素，
 
-//all,any,noe
+===============all,any,noe===============
 all_of(vec.begin(),vec.end(),[](int x){return x>80;});//判断是否全部的vec中的元素都大于80
 any_of(vec.begin(),vec.end(),[](int x){return x>80;});//判断是否vec中的元素有一个大于80
 noe_of(vec.begin(),vec.end(),[](int x){return x>80;});//判断是否全部的vec中的元素都不大于80
 
-//copy
+===============copy===============
 copy(vec.begin,vec.end,vec2.begin());//将vec中元素复制到vec2中
 copy_if(vec.begin,vec.end(),//source
      vec2.begin(),//destination
@@ -519,11 +516,11 @@ copy_if(vec.begin,vec.end(),//source
 copy_n(vec.begin(),4,vec2.begin());//复制vec的前四个元素到vec2中
 copy_backward(vec.begin(),vec.end(),vec2.end());复制vec的元素到vec2中，最末元素对齐，即最后两个数组的最后面的那个元素是相同的
 
-//move
+===============move===============
 move(vec.begin,vec.end,vec2.begin());//将vec中元素剪切到vec2中
 move_backward(vec.begin(),vec.end(),vec2.end());剪切vec的元素到vec2中，类似copy_backward，但是是剪切
 
-//transform 转换，相当于convert
+===============transform 转换，相当于convert===============
 transform(vec.begin(), vec.end(),//source
 		   vec3.begin(),//destination
 		   [](int x){return x-1;});//操作  最后的结果是将vec中的元素拿出来进行lambda函数的操作后，放进destination中
@@ -532,49 +529,49 @@ transform(vec.begin(), vec.end(),//source1
 		   vec3.begin(),//destination
 		   [](int x，int y){return x+y;});//操作  最后的结果是将vec(对应x)和vec2(对应y)中的元素拿出来进行lambda函数的操作后，放进destination中		 
 		 
-//swap 交换
+===============swap 交换===============
 swap_ranges(vec.begin(),vec.end(),vec2.begin());
 
-//fill 填充
+===============fill 填充===============
 fill(vec.begin(),vec.end(),9); //将vec中的元素填为9
 fill_n(vec.begin(),3,9); //将vec中的前3元素填为9
 gnerate(vec.begin(),vec.end(),rand); //将vec中的元素填为随机数字
 gnerate_n(vec.begin(),3,rand); //将vec中的前3元素填为随机数字
 
-//replace 替换
+===============replace 替换===============
 replace(vec.begin(),vec.end(),6,9); //将vec中的所有为6的元素替换为9
 replace_if(vec.begin(),vec.end(),[](int x){return x<6;},9); //将vec中的所有少于6的元素替换为9
 replace_copy(vec.begin(),vec.end(),vec2.begin(),6,9); //将vec中的所有为6的元素替换为9,同时也会将处理后的数据复制到vec2中，但vec跟没replace前时一样的，不会对vec进行操作
 
-//remvoe 删除
+===============remvoe 删除===============
 remove(vec.begin(),vec.end(),6); //将vec中的所有为3的元素删除
 remove_if(vec.begin(),vec.end(),[](int x){return x<6;}); //将vec中的所有少于6的元素删除
 remove_copy(vec.begin(),vec.end(),vec2.begin(),6,9); //将vec中的所有为6的元素删除,同时也会将处理后的数据复制到vec2中，但vec跟没remove前时一样的，不会对vec进行操作
 
-//unique 唯一
+===============unique 唯一===============
 unique(vec.begin(),vec.end());//只保留一个连续相等的元素，如1,2,2,3则变成1,2,3
 unique(vec.begin(),vec.end(),less<int>());//remove elements whose previous element is less than itself
 unique_copy(vec.begin(),vec.end(),vec2.begin()); 
 
-//reverse 反转
+===============reverse 反转===============
 reverse(vec.begin(),vec.end());
 reverse_copy(vec.begin(),vec.end(),vec2.begin()); 
 
-//rotate 旋转
+===============rotate 旋转===============
 rotate(vec.begin(),vec.begin()+3, vec.end());将前3个元素和后面的元素调换
 rotate_copy(vec.begin(),vec.begin()+3, vec.end(),vec2.begin()); 
 
-//shuffle 乱序
+===============shuffle 乱序===============
 random_shuffle(vec.begin(), vec.end());
 random_shuffle(vec.begin(),vec.end(),rand);
 
-//other
+===============other===============
 is_sorted(vec.begin(),vec.end());//是否已经排好序
 itr= is_sorted_until(vec.begin(),vec.end());//找出第一个没排好序的元素
 is_heap(vec.begin(),vec.end());//是否已经是heap
 itr= is_heap_until(vec.begin(),vec.end());//找出第一个不是heap的元素
 
-//sorting排序 只适合能随机访问的元素，能进行下标[]显示
+===============sorting排序 只适合能随机访问的元素，能进行下标[]显示===============
 sort(vec.begin(),vec.end()));//默认是从小到大排序
 sort(vec.begin(),vec.end(),[](int x,int y){return x<y;});
 partial_sort(vec.begin(),vec.begin()+5,vec.end(),greater<int>());//排序完后的序列是前5个最大的元素的序列，但前5个元素的顺序是从大到小
@@ -587,7 +584,7 @@ pop_heap(vec.begin(),vec.end());vec.pop_back();//需要两步弹出最大的元�
 vec.push_back(100);push_heap(vec.begin(),vec.end());//需要两步插入一个新元素
 make_heap(vec.begin(),vec.end());sort_heap(vec.begin(),vec.end());//sort完之后是从小到大排列的序列，但sort_heap只能适用于heap的vec，即要用sort_heap前需make_heap进行构建heap
 
-///////////////////////////////只对排好序的序列起作用//////////////////////
+===============只对排好序的序列起作用===============
 //binary_search 只对排好序的序列起作用
 bool is_found = binary_search(vec.begin(),vec.end(),9);//是否vec中有元素9
 bool is_found = includes(vec.begin(),vec.end(), sub_vec.begin(),sub_vec.end());//是否在vec中包含sub_vec中的所有元素，vec和sub_vec都必须是排列好的
@@ -623,6 +620,7 @@ string s3(s1,2);//s3:llo
 string s4(s1,2,1);//s3:l,   2是start position，1是size
 string s5(5,"a");//s5:"aaaaa"
 string s6({'a','b','c'});//s6:"abc"
+
 
 s1 ="abc";
 s1.size() s1.length()都是返回s1的长度，即3
@@ -660,6 +658,7 @@ size_t position = s1.find("ab",2);//从第二个字符起往后找
 size_t position = s1.find("ab",2，3);//从第二个字符起往后找，找到往后的3个字符为止
 size_t position = s1.find_first_of("ab");//从s1中找出第一个字符，该字符被包含在"ab"中，返回该字符的位置
 size_t position = s1.find_first_of("ab",5,2);//从s1中从第5个字符开始找出第一个字符，该字符被包含在"ab"在前2个字符中，返回该字符的位置
+bool is_contain = name.find("ab")!= string:npos;//字符串中是否包含
 
 s1.compare(s2);//当s1>s2返回正数，当s1<s2返回负数，否则为0，相等
 s1.compare(3,2,s2);//比较从s1的第三个字符起，长度为2，然后和s2比较
@@ -687,6 +686,45 @@ u16string s;//string char16_t  可以使用上面的<string>函数
 u32string s;//string char32_t 可以使用上面的<string>函数
 wstring s;//string wchar_t(wide character) 可以使用上面的<string>函数   例外是to_wstring(....);
 
+===============string 优化 用string_view可以避免创建内存===============
+void PrintName(std::string_view name)
+{
+	cout<<name<<endl;
+}
+std::string name="chen xxyy"//这里会产生一个分配内存
+std::string_view firstName(name.c_string(),4);//string_view这个不会产生clone，从而不会分配内存，4是长度,
+std::string_view lastName(name.c_string()+5,4);//string_view这个不会产生clone，从而不会分配内存,5是长度，4是开始的index,
+PrintName(firstName);
+PrintName(lastName);
+
+
+char* name="chen xxyy"//这里不会产生一个分配内存
+std::string_view firstName(name,4);//string_view这个不会产生clone，从而不会分配内存，4是长度,
+std::string_view lastName(name+5,4);//string_view这个不会产生clone，从而不会分配内存,5是长度，4是开始的index,
+PrintName(firstName);
+PrintName(lastName);
+
+----------------------------------char--------------------------------
+char* a = R"abc
+defjdj
+ghij";//使用R"xxx"表示可以多行
+
+include <string>
+char* a1= "abc";
+char* a2 = a1;
+a2[0] = "d";//此处会出错，应为string不能被修改，所以应该要用cstring来修改,如下
+include <cstring>
+include <string>
+char* a1= new char[3];
+strcpy(a1,"abc");
+char* a2 = a1;
+a2[0] = "d"
+
+char* buff = new char[8];
+char* a="bcsdsf";
+strlen(a);//用于获取字符串的长度
+memset(buff,0,8);//设置buff的8个元素都为0
+memcpy(buff,a,strlen(a)+1);//复制a中的字符串到buff中，为什么要strlen(a)+1，因为要最后一位0来判断数组是否结束
 
 --------------------------------i/o------------------------------------------
 {
@@ -704,8 +742,8 @@ wstring s;//string wchar_t(wide character) 可以使用上面的<string>函数  
 
 ifstream infs("mylog.txt");//读文件
 int i;
-inf>>i;//读取一个int数字
-//四个状态 goodbit,badbit,failbit,eofbit
+infs>>i;//读取一个int数字
+===============四个状态 goodbit,badbit,failbit,eofbit===============
 infs.good();//一切正常 goodbit=1
 infs.bad();//错误  badbit=1
 infs.fail();// badbit=1， failbit =1
@@ -719,7 +757,7 @@ if(infs>>i)....
 infs.exceptions(ios::badbit|iso::failbit);//设置exception的触发条件,当badbit或者failbit被设置为1的时候会抛出异常
 infs.exceptions(ios::goodbit);//表示不会抛出异常
 
-//format
+===============format===============
 cout<<34<<endl;//34
 cout.setf(ios::oct,ios::basefield);//设置为8进制
 cout<<34;//42
@@ -743,7 +781,7 @@ cout<<340.1;//340.100
 ios::fmtflag f=cout.flags();//获取当前的flags
 cout.flags(ios::oct|ios::showbase);//设置为8进制，且显示进制，8进制前面一个字符是0
 
-//unformat
+===============unformat===============
 ifstream infs("Mylog.txt");
 char buf[80];
 infs.get(buf,80);从infs读取80个字符到buf中
@@ -760,9 +798,9 @@ outfs.put('c');
 outfs.write(buf,6);//将buf前6个字符写入outfs中
 outfs.flush();
 
-//i/o operation
-// formatting data  -- stream
-// conumunicating data to external devices -- stream buffer
+===============i/o operation===============
+//1. formatting data  -- stream
+//2. conumunicating data to external devices -- stream buffer
 streambuf* orginal_streambuf = cout.rdbuf();//输出到的stream buffer
 ostream myCout(orginal_streambuf);
 myCout<<2<<endl;//会输出到cout中，而myCout的设定不会改变cout的设定
@@ -798,7 +836,7 @@ istream& operator>>(istream& sm,xxClass& xx_value)
 
 
 --------------------------------boost------------------------------------------
-------convert  转换  string转int 或者float转string等等--------------------------
+===============convert  转换  string转int 或者float转string等等===============
 #include "boost\lexical_cast.hpp"
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
@@ -813,7 +851,7 @@ try
 	cout<<e.waht()<<endle;
 }
 
-------variant--------------------------
+===============variant===============
 ///////variant和union类似，但variant支持string等类型
 #include "boost\variant.hpp"
 boost::variant<int,string> u1;//u1可以被赋值为int或者string
@@ -842,7 +880,14 @@ for(auto x:vec)
 	boost::apply_vistor(f,x);//对应的vce元素中的元素变为：如果是整数，则*2；如果是string，则复制一次（DoubleVisitor）
 }
 
-///////any任意类型
+#include <variant>
+std::variant<std::string,int> data;
+data = "xxxx";
+cout<<std::get<std::string>(data)<<endl;
+data = 2;
+cout<<std::get<int>(data)<<endl;
+
+===============any任意类型===============
 boost::any x;
 x=string("hello");
 x=2.3;//可以是任意类型
@@ -850,7 +895,13 @@ cout<<x<<endl;//error  正确写法是: cout<<boost::any_cast<double>(x)<<endl;/
 if(x.empty());//x是否没有被赋值
 if(x.type()==typeid(char));//x的当前类型是否是char类型
 
-///////optional
+#include<any>
+std::any data;
+data = 2;
+data = "xxxx";
+std::string& s  = std::any_cast<std::string&>(data);
+
+===============optional===============
 #include "boost\optional.hpp"
 boost::optional<char> op;//相当于csharp的char?可以为null
 op="A";
@@ -874,3 +925,225 @@ boost::optional<int> a1(1);
 boost::optional<int> a2(2);
 boost::optional<int> a3;
 if(a1<a2);//相当于*i1<*i2，如果没有赋值的情况下，默认没有赋值是最小的
+
+#include <optional>
+std::optional<string> hello(int i){ if(i==1)return "kkkk";else return {};}
+auto data = hello(4);
+if(data.has_value()) //data有值,就是csharp中的？,nullable
+{
+	std::string& value = data.value();
+	std::string value2 = data.value_or("dkkdkd");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//C++ 11特点
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+--------------------------------initializer list------------------------------------------
+#include<initializer_list>
+class XXClass{
+	public:
+	int age;//如果用{}构造instance，如果都没有，则用用这个(3)
+	int code;
+	XXClass(int a,int c){age = a;code = c;}//如果用{}构造instance，如果有匹配的构造函数，则第二(2)个优先用这个
+	XXClass(const initializer_list<int>& vec){age = *(vec.begin());code = *(++vec.begin());}//如果用{}构造instance，如果有initializer_list的构造函数，第一个(1)优先使用这个
+}
+XXClass dd{3};//或者XXClass dd = {3,4};
+
+---------------------auto---------------------
+auto xxx1 =....;//auto 相当于csharp的var
+auto xxx1 = xxxfunction;//auto的指针形式是 void(*xxx1)(int)= xxxfunction 其中void是返回值，xxx1是自定义的名称,int是里面的参数；xxx1(1000)调用xxxfunction函数
+或者lambda是这样的  auto k = [](int value){count<<value<<endl;}    //int value 是参数
+//,[]是外部的变量，通过什么方式进来
+如:
+int a;
+auto k = [&a](int value){count<<a<<endl;} //这样外部的a就可以进来lambda中使用了（[&]则是全部外部变量都通过引用进来）,也可以通过[a]或者[=]都是copy的形式给lambda
+如果是上述这种形式，则它的auto是 const std:function<void(int)>&      当然要include <functional>
+std:vector<int> values = {1,2,3};
+auto it = std::find_if(values.begin(),values.end(), [](int value){return value>3;}   //要include <algorithm>
+cout<<*it<<endl;
+返回多个值
+std:pair<xxClass1,xxClass2> yyFunction(){...., std:pair<xxClass1,xxClass2> xxPair = make_pair<xxClass1,xxClass2>(xx1,xx2);return xxPair;}//用pair，make_pair创建，用xxPair.first获取第一个（或者std:get<0>(xxPair)）
+或者自定定义struct，然后用{xx1,xx2}创建这个struct
+
+---------------------for---------------------
+for(auto& i:v)//注意&
+{
+	i=4;
+}
+
+---------------------nullptr---------------------
+nullptr 空的指针
+
+---------------------LValue和RValue---------------------
+LValue 是指变量（如 i,j,k） 在函数的参数中用xxxClass&表示
+RValue 是指赋予的值(如 1，2，3) 在函数的参数中用xxxClass&&表示两个&
+如果想函数中的参数既能用LValue又能RValue，则用const xxClass&表示，其实际上是 xxClass temp = ??; const xxClass& u = temp;
+
+class XXClass
+{
+	int size;
+	int* arr_;
+	XXClass(const XXClass& rhs)//一个&，Copy构造函数
+	{
+		size= rhs.size;
+		arr_=new int[size];
+		for(int i=0;i<size;i++)
+			arr_[i] = rhs.arr_[i];
+	}
+	XXClass(const XXClass&& rhs)//两个&，Move构造函数
+	{
+		size= rhs.size;
+		arr_=rhs.arr_;
+		rhs.arr_=nullptr;
+	}
+	
+	~XXClass()
+	{
+		delete arr_;
+	}
+}
+void foo(XXClass v);
+XXClass v;
+foo(v);//这样会调用Copy构造函数
+foo(std::move(v));//这样会调用Move构造函数
+
+template<typename T>
+void relay(T&& arg) //注意这里是两个&&
+{
+	foo(std::forward(arg));//这样是最好的，arg为LValue的时候，经过std::forward会保持不变；arg为RVvalue的时候，经过std::forward会保持不变；
+}
+
+
+---------------------User defined Literals------------------------------------------
+constexpr double operator"" mm(long double x){return x;}
+constexpr double operator"" cm(long double x){return x*10;}
+constexpr double operator"" m(long double x){return x*1000;}
+double height = 3.4cm;//即height=34
+
+constexpr int operator"" bin(const char* str, std::size_t  size)
+{
+	int ret =0;
+	for(int i=0;i<size;i++)
+	{
+		ret = ret<<1;
+		if(str[i]=='1')
+			ret+=1;
+	}
+	return ret;
+}
+"11000111"bin;
+
+//constexpr int operator"" bin(xxx)  其中参数的类型(parameter type)只能是如下：
+long double
+unsigned long long
+const* char
+const* char*,std::size_t
+const* wchar_t*,std::size_t
+const* char16_t*,std::size_t
+const* char32_t*,std::size_t
+//返回类型(return type)可以任意类型
+
+---------------------Pointer------------------------------------------
+#include <memory>
+===============shared_ptr===============
+std:shared_ptr<XXXClass> xxPointer= std:make_share<XXXClass>("aa");//会增加refCount,当all reference都退出scope时候才会调用delete析构函数，故std:shared_ptr<XXXClass> xxPointer2= xxPointer;当xxPointer2和xxPointer都退出scope的时候才会销毁
+xxPointer.use_count;//当前有多少个引用
+XXXClass* p=xxPointer.get();//返回std:shared_ptr的raw pointer(此处是XXXClass*,不用get前是std:shared_ptr<XXXClass>)
+std:shared_ptr<XXXClass> xxPointer= std:shared_ptr<XXXClass>(new XXXClass("aa"),[](XXXClass *p){cout<<"deleting;";delete p;});//第二个lambda是定义这个xxPointer销毁的时候调用的析构函数，如果是用make_share构造的话，用的是类中的析构函数
+如果是数组的话，要用这种，否则只会析构第一个元素，其他元素没有被析构
+std:shared_ptr<XXXClass> xxPointer= std:shared_ptr<XXXClass>(new XXXClass[3],[](XXXClass *p){cout<<"deleting;";delete[] p;})
+
+===============weak_ptr===============
+std:weak_ptr<XXXClass> xxPointer2= xxPointer;//不会增加refCount，析构不是std:weak_ptr要管理的事情，而是xxPointer(赋值的ptr)它自己管理的事情（xxPointer是std:shared_ptr; std:weak_ptr可以被std:shared_ptr赋值）
+xxPointer2.use_count;//当前有多少个引用
+xxPointer2.lock()->xxxfun();//需要调用lock来保证指针有效,
+xxPointer2.expired()//检测指针过期无效（当外部被删除时，会变成无效）
+
+===============unique_ptr===============
+一个对象只能有一个unique_ptr
+unique_ptr只能被move，不能被copy
+std:unique_ptr<XXXClass> xxPointer= std:make_unique<XXXClass>();
+std:unique_ptr<XXXClass> xxPointer= std:unique_ptr<XXXClass[]>(new XXXClass[3]);//数组不用像shared_ptr另外写析构函数
+unique_ptr相当于一个传递作用，将当前的unique_ptr传递给下一个unique_ptr(通过std:move)管理;
+如：
+void f(unqiue_ptr<Dog> p)
+{
+	p->bark();
+}
+
+unqiue_ptr<Dog> getDog()
+{
+	std:unique_ptr<Dog> d= std:make_unique<Dog>();
+	return d;//此处实际相当于return move(d)
+}
+
+std:unique_ptr<Dog> xxPointer= std:make_unique<Dog>();
+f(std::move(xxPointer));//xxPointer调用后，已经在move的时候被设置为nullptr，因为unique_ptr相当于一个传递作用，将当前的unique_ptr传递给下一个unique_ptr(通过std:move)管理;
+std:unique_ptr<Dog> xxPointer2=  getDog();
+
+---------------------chrono时长---------------------
+#include <chrono>
+std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::high_resolution_clock::now();//获取当前时间
+std::chrono::time_point<std::chrono::steady_clock>  end = std::chrono::high_resolution_clock::now();
+std::chrono::duration<float> duration = end - start;
+duration.count();//以秒为单位的时长
+
+std::chrono::system_clock 系统时间，windows上桌面右下角的时间，可以被手动修改成其他时间
+std::chrono::steady_clock 不能修改的时间，  --一般我们用的是这个时间
+std::chrono::high_resolution_clock 提供一个高精度的tick period 
+
+---------------------random 随机数---------------------
+===============std::defualt_random_engine===============
+include<random>
+std::defualt_random_engine random_engine;
+andom_engine.min();//最小的数值
+andom_engine.max();//最大的数值
+random_engine();//产生一个随机数
+
+std::stringstream state;
+state<<random_engine;//用state保存random_engine的状态
+random_engine();....//一些列的操作
+state>>random_engine;//用state还原random_engine的状态
+
+
+unsigned seed=std::chrono::steady_clock::now().time_since_epoch().count();
+std::defualt_random_engine random_engine(seed);
+random_engine.seed();//还原到初始化的seed的状态
+random_engine.seed(xxx);//设置random_engine的种子为xxx
+
+vector<int> vec={1,2,3,4,5,6,7};
+std::shuffle(vec.begin(),vec.end(),random_engine);
+
+===============std::uniform_int_distribution===============
+std::uniform_int_distribution<int> distribution(0,5);//可以产生[0,5]
+distribution(random_engine);//这样就可以产生一个[0,5]的随机数
+std::uniform_real_distribution<double> distribution(2.1,5.5);//可以产生[0,5.5)
+
+--------------------------tuple--------------------------
+#include <tuple>
+
+std::tuple<std::string,int> a=std::tuple<std::string,int>("ddd",2);
+std::tuple<std::string,int> a=std::make_tuple("ddd",2);
+
+std::string name;
+int age;
+std::tie(name,age) = hello();
+std::tie(name,std::ignore) = hello();//std::ignore忽略
+直接操name,age;
+
+auto[name, age] = hello(); //或者这种方式更好
+直接操name,age;
+
+std::tuple<std::string,int> hello()
+{
+	reutrn {"ssss",4};
+}
+std::tuple<std::string,int> a = hello();
+std::string& name = std::get<0>(a);
+std::get<0>(a)="bbbb";//修改其中的值
+
+auto t4=std::tuple_cat(t2,t3);//两个tuple连接起来，如t2是(string,int),t3是(double,float),则t4就是(string,int,double,float)
+
+std::tuple_size<decltype(t4)>::value;//tuple的type的个数
+std::tuple_element<1,decltype(t4)>::type d;//如果t4是t4就是(string,int,double,float)，则d是int类型
+
