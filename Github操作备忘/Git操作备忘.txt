@@ -4,15 +4,95 @@ ssh-keygen -t rsa  -C  "your email@.com" 创建密钥
 将一个远程仓库克隆到本地
 git clone https://github.com/xxxx/yyy.git
 
-git add "file_name" 确定要提交的文件
+显示commit的信息
+git log --oneline --graph
 
-git commit -m "第一次提交 xxx文件"
+显示文件的状态
+git status -s
 
-将本地(origin)的commit的修改提交到远程的master上
-git push origin master
+git add "file_name" 将文件变成staged状态
+git add *
 
-将本地和远程仓库建立联系
-git remote add origin remote_url
+对远程的remote_xx_name推送r
+git push remote_xx_name local_branch_name:remote_branch_name
+
+将xx_name和远程仓库建立联系
+git remote add <xxname> remote_url
+
+更新
+git pull
+
+
+预览差异
+git diff source_branch_name target_branch_name
+
+ 
+
+ 
+    
+
+你想丢弃你在本地的所有改动与提交，可以到服务器上获取最新的版本历史，并将你本地主分支指向它
+git fetch origin                         到服务器上获取最新的版本历
+git reset --hard origin/master            你本地主分支指向它
+
+//////////////////commit/////////////////////////////////////
+git commit -m "代码提交信息"
+不产生新的commit，将这次的commit添加到上次的commit中(--amend)，且(--no-edit)不改变commit的desc
+git commit -amend --no-edit
+
+//////////////////reset（整个版本的还原）/////////////////////////////////////
+放弃本地修改
+git reset --hard orgin/master  
+
+对所有文件从stageed（git add操作之后）还原到unmodify状态
+git reset file_name
+
+回到当前状态的前2次commit之前的状态
+git reset --hard HEAD~2
+
+回到指定的commit_xxx_id状态
+git reset --hard commit_xxx_id
+
+回到指定的commit_xxx_id对应的指针的状态  该信息从 git reflog中查看指针
+git reset --hard HEAD@{xxxx}
+
+//////////////////checkout/////////////////////////////////////
+在单个文件之中还原到指定的commit_id状态，之后的修改提交是在最新修改提交是在最新的commit_id之后提交（不是之前的还原到特定的commit_id之后提交的）
+git checkout commit_xx_id -- file_name  
+
+/////////////////////////merge相关/////////////////////////
+先确定要合并到的分支，把自己当前分支切到到要合并到的分支
+git checkout xx_branch_nam--
+将yyy_branch_name合并到xx_branch_name上
+git merge --no-ff -m "merge的信息" yyy_branch_name   
+
+当merge的时候发生冲突
+需要手动去解决冲突
+之后还是要git add 。。。。  git commit 。。。。 提交解决冲突后的文件的  
+
+
+/////////////////////////rebase相关/////////////////////////
+通常rebase前，需要创建一个backup分支来作为备份，以防止出错时候能够还原
+
+xx_branch rebase from yy_branch
+切换到xx_branch分支
+git checkout xx_branch_name
+rebase到yy_branch分支
+git rebase yy_branch_name
+如果产生冲突，则修改冲突,然后,然后git add还需要执行 git rebase --continue
+
+
+将xx_branch_name的以xxx_commit_id下一个commit拔起来，插入到yy_branch分支上的HEAD@{xxxx}位置
+git rebase --onto yy_branch HEAD@{xxxx} xxx_commit_id xx_branch_name
+
+
+git rebase -i  
+可以修改commit的内容
+可以修改commit的message
+可以改变commmit的顺序
+可以删除commit
+可以合并或者拆分commit
+可以运行提交commit
 
 /////////////////////////分支相关/////////////////////////
 查看所有分支
@@ -20,6 +100,10 @@ git branch -a
 
 查看远程分支
 git branch -r 
+
+在某个节点创建分支
+git branch new_branch_name xxxx_cmmit_id 
+
 
 本地创建新的分支,并切换到新的分支上
 git checkout -b branch_name      相当于 git branch branch_name 和 git checkout branch_name
@@ -36,6 +120,25 @@ git branch -d branch_name
 删除github上面的远程分支
 git push origin:branch_name
 
+/////////////////////////stash相关(临时修改)/////////////////////////
+将dev分支的本地修改的文件放到临时区域，以备之后回来再继续修改
+git stash 
+建立新的分支进行修改
+git checkout -b xx_edit_branch_name
+然后修改，修改完之后提交，切换到master分支，进行合并
+将临时区域的文件拿回来
+1.切换回dev分支
+git checkout dev_branch_name
+git stash pop  
+
+stack是共用的，所以需要用git stach list 查看到底是哪个分支上的push进去的内容，然后进行
+git stash pop stach@{xxxx}
+
+/////////////////////////其他相关/////////////////////////
+将本地和远程仓库建立联系，将origin指的就是remote_url
+git remote add origin remote_url
+将本地master的内容推送到origin（及remote_url）上
+git push -u origin master
 
 
 
