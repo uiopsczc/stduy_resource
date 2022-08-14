@@ -1,0 +1,97 @@
+默认执行的是Makefile文件
+目标:依赖
+Tab命令
+#先执行依赖，如果没有依赖，则向下找目标为该依赖的，如果依赖都有了，则执行目标下的命令
+a:
+	echo "hello a"
+	@echo "hello b"  #@表示这行不显示代码，只显示结果
+	echo "hello c"
+cmd命令中cd到该文件的目录
+然后执行make a 
+即可显示编译结果
+hello a
+hello b
+hello c
+
+---------------------------make操作---------------------------------------------------
+make -h 显示帮助
+make -v 显示版本
+make -f xx文件  --指定make对xx文件里面的内容进行make编译（当执行的文件不是makefile文件时，用该命令指向那个需要编译的文件）
+make -n 只输出命令，不进行执行，一般用来测试；  make -s 只执行命令，不进行输出命令
+make -C xx文件夹 --指定makefile所在的文件夹
+
+------------------------------一次所有编译，和分开编辑的区别------------------------------
+不好的示范
+gcc add.cpp sub.cpp calc.cpp -o calc   #-o calc表示编译后输出的文件路径为calc， 每次add.cpp sub.cpp有修改，都会三个文件都进行编译一次，耗时长
+好的示范
+calc.o:add.o sub.o
+	gcc add.o sub.o calc.cpp -o calc 
+add.o:add.cpp
+	gcc -c add.cpp -o add.o #编译生成add.o
+sub.o:sub.cpp
+	gcc -c sub.cpp -o sub.o #编译生成add.o
+分开的话，没改动的(add.o,或者sub.o)不会进行再次编译， 即全部编译和部分编译的却别
+
+----------------------------编译过程--------------------------------
+gcc -lstdc++ main.cpp #编译main.cpp文件 输出main.out, -lstdc++ 直接将源文件main.cpp编译成二进制可执行文件main.out
+编译过程拆分：(lstdc++)
+	预处理 gcc -E main.cpp > main.ii #生成main.ii，把include里面的东西和main.cpp的自己的代码拷贝到main.ii中
+	编译 gcc-S main.ii #生成main.s, main.s是一个汇编代码文件
+	汇编 gcc -c main.s #生成main.o的二进制文件，需要加个链接才能进行执行
+	链接 gcc -lstdc++ main.o #生成main.out可执行文件  然后./main.out 就可以显示运行的结果
+
+------------------------------变量相关------------------------------
+用$(XX变量)或者${XX变量}来进行显示
+make -p #查看系统变量
+AS 汇编程序名，默认是OS
+CC c编译器名称，默认是CC
+CPP C预编译器名称 默认是cc -E
+CXX c++编译器的名称，默认是g++
+RM 删除文件的别名，默认是rm -f
+
+$^ 不重复依赖，即（目标:依赖）中依赖的内容
+$@ 目标文件，即（目标:依赖）中目标的内容
+
+例子：
+OBJ=add.o sub.o calc.o
+TARGET= calc
+例子1
+$(TARGET):$(OBJ)
+	gcc $(OBJ) -o $(TARGET)
+例子2
+$(TARGET):$(OBJ)
+	gcc $^ -o $@
+例子3
+clean:
+	$(RM) *.o $(TARGET)
+$(TARGET):$(OBJ)
+	$(CXX) $^ -o $@
+	
+------------------------------模式匹配相关------------------------------
+%.o:%.cpp  #.o依赖于对应的.cpp文件 格式为%目标:%依赖
+wildcard $(wildcard ./*.cpp) 获取当前目录下的所有.cpp文件
+pastsubst $(pastsubst %cpp, %o, $(wildcard ./*.cpp))将对应的cpp文件转换为.o文件，.cpp文件的为当前目录的所有.cpp文件(./*.cpp)  
+
+------------------------------动态链接库------------------------------
+动态链接库 .dll(windows) .so(linux)文件 #运行时才加载， 链接是指库文件和二进制程序分离，用某种特殊手段维护两者之间的关系
+-fPIC 产生位置无关的代码
+-shared 共享
+-l 指定动态链接库 如 -ltest 就是指定动链接库为 libTest.so
+-L 手动指定库文件的搜索目录
+
+g++ -shared -fPIC test.cpp -o libTest.so  #生成libTest.so的库文件， libxx.so是格式，必须这样写才能被系统判断为是库文件
+g++ -ltest -L./ main.cpp -o main #链接到libTest.so中编译main.cpp输出到main.out中
+编译时和运行时都需要指定链接库位置
+手动指定链接库的位置
+DYLD_LIBRARY_PATH = xx目录(Mac下)       linux下为LD_LIBRARY_PAT
+export DYLD_LIBRARY_PATH(Mac下)         linux下为export LD_LIBRARY_PATH
+./main #指定玩动态链接库的位置后，运行./main执行
+
+------------------------------静态链接库------------------------------
+静态链接库 .lib(windows) .a(linux)文件 #会把库中的代码编译到二进制程序中，编译完成后可以删除库文件
+g++ -c test.cpp -o test.o #先编译生成test.o
+ar -r libtest.a test.o  #再生成test.a
+g++ -ltest -L./ main.cpp -o main.out #链接到libTest.a中编译main.cpp输出到main.out中
+
+
+
