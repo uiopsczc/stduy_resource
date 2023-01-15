@@ -1,3 +1,4 @@
+#换行要在行尾加上\
 默认执行的是Makefile文件
 目标:依赖
 Tab命令
@@ -93,5 +94,89 @@ g++ -c test.cpp -o test.o #先编译生成test.o
 ar -r libtest.a test.o  #再生成test.a
 g++ -ltest -L./ main.cpp -o main.out #链接到libTest.a中编译main.cpp输出到main.out中
 
+------------------------------公共头文件------------------------------
+相当于在其他Makefile文件中inclue xxx公共头文件的路径
+SOURCE:=$(wildcard ./*.cpp ./*.c)
+OBJ:=$(patsubst %.cpp,%.o,$(SOURCE)) #替换.cpp为.o
+OBJ:=$(patsubst %.c,%.o,$(OBJ)) #替换.c为.o
+:= 统一都用这种赋值
+= 会直接用最终值，和正常编程有容易产生歧义
+
+------------------------------宏------------------------------
+ifndef xxx  #如果没有声明变量xxx
+DoSomething2
+else
+DoSomething2
+endif
+
+------------------------------调用Shell命令(cmd命令)------------------------------
+A:=$(shell ls)
+B:=$(shell pwd)
+B:=$(shell if[! -f abc];then touch abc;fi;) #如果没有abc文件，则创建abc文件
+
+--------------------------------------------------------------------------------------------
+make -C ./xxx目录  #-C指定make的目录为xxx目录，即在xxx目录中查找Makefile文件中第一个目标进行执行
+.PHONY:XXX YYY #make指令中的参数忽略文件或者文件夹为XXX,YYY,参数是引用Makefile中的XXX,YYY
+
+DIRS:=XXX YYY
+all:$(DIR)
+
+$(DIRS):
+	make -C $@
+#相当于执行make -C XXX, make -C YYY
+
+echo $(shell for dir in $(DIRS);do make -C $$dir clean;done) # $dir表示shell中的dir变量;$$dir表示将shell中的dir变量展开到makefile中
 
 
+----------------if----------------------------------
+没有elseif的用法，只能嵌套
+ifeq  是否等于
+ifneq 是否不等于
+ifdef 是否存在变量
+ifndef 是否不存在变量
+
+#换行要在行尾加上\
+ifeq ($(A),123) #需要在ifeq后加空格
+	DoSomething1
+else
+	DoSomething2
+endif
+
+ifndef ($(A))  #一般用 ifndef A就行了
+
+make flag=123 #则在Makefile中可以使用$(flag)来表示make指令传入来的参数flag(123)
+
+----------------for----------------------------------
+用shell中的循环实现
+TARGET = a b c d
+方法1：
+	for v in $(TARGET);\
+		do touch $$v;\
+	done;\
+方法2：$(shell for v in $(TARGET); do touch $$v; done;) 
+
+
+----------------自定义函数----------------------------------
+不能有返回值
+define XXXFunc  #定义函数
+	doSomething
+	echo $(1) $(2) #输出传进来的第一个参数$(1)
+enddef
+
+$(call XXXFunc, 123, 456) #调用函数,后面的传进函数中的参数，函数中用$(1) $(2)来获取参数
+相当于将函数中的内容以多行命令执行
+
+----------------make install----------------------------------
+make #用途：编译成二进制文件（包含各种静态库动态库文件）
+make install #用途：把编译好的二进制拷贝到安装目录，然后添加全局可执行的路径(shell)，添加配置文件
+make clean #用途：清理不需要的文件
+
+which xxShell命令  #显示xxShell命令的path
+
+if [-d $(INSTALL_PATH)];\  # 是否存在INSTALL_PATH目录
+	then  doSomething;\
+else\
+	do anotherSomething;\ #换行要在行尾加上\
+fi;
+
+ln -sv 源文件路径(即编译出来的文件路径) 目标文件路径
