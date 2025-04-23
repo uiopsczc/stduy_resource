@@ -1,0 +1,13 @@
+gcc是c的编译器
+g++是c++的编译器
+mingW64的bin文件夹下有gcc和g++两个exe文件
+g++ -g xx.cpp -o xx.exe  // -g表示生成可调试的exe文件， -o表示输出文件名称
+
+CMakeLists.txt
+project(xxx) --指定工程的名字为xxx
+add_executable(aaa.exe bbb.cpp ccc.cpp) --生成aaa.exe,通过bbb.cpp和ccc.cpp
+
+在build文件夹下用命令行执行
+CMake .. --生成MakeFile
+Make .. --生成exe文件
+
